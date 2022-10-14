@@ -1,0 +1,93 @@
+package com.sobev.longpolling.server;
+
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import lombok.Data;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+
+
+/**
+* @author luojx
+* @date 2021/9/6 14:08
+* https://www.fatalerrors.org/a/understanding-long-polling-how-configuration-center-implements-push.html
+*/
+@Slf4j
+@SpringBootApplication
+@RestController
+public class ConfigServer {
+  @Data
+  private static class AsyncTask {
+    // The context of the long polling request, including the request and response body
+    private AsyncContext asyncContext;
+    // Timeout flag
+    private boolean timeout;
+
+    public AsyncTask(AsyncContext asyncContext, boolean timeout) {
+      this.asyncContext = asyncContext;
+      this.timeout = timeout;
+    }
+  }
+
+  // guava Multiple values provided Map，One key Can correspond to multiple value
+  private Multimap<String, AsyncTask> dataIdContext = Multimaps.synchronizedSetMultimap(HashMultimap.create());
+
+  private ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("longPolling-timeout-checker-%d")
+          .build();
+  private ScheduledExecutorService timeoutChecker = new ScheduledThreadPoolExecutor(1, threadFactory);
+
+  @RequestMapping("/listener")
+  public void addListener(HttpServletRequest request, HttpServletResponse response){
+    String dataId = request.getParameter("dataId");
+
+    // Turn on asynchronous
+    AsyncContext asyncContext = request.startAsync(request, response);
+    AsyncTask asyncTask = new AsyncTask(asyncContext,true);
+
+    // maintain dataId And asynchronous request context
+    dataIdContext.put(dataId, asyncTask);
+    timeoutChecker.schedule(() -> {
+      if(asyncTask.isTimeout()){
+        dataIdContext.remove(dataId,asyncTask);
+        response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+        asyncContext.complete();
+      }
+    },30000, TimeUnit.MILLISECONDS);
+  }
+
+  // Configure publishing access point
+  @RequestMapping("/publishConfig")
+  @SneakyThrows
+  public String publishConfig(String dataId, String configInfo){
+    log.info("publish configInfo dataId: [{}], configInfo: {}", dataId, configInfo);
+    Collection<AsyncTask> asyncTasks = dataIdContext.removeAll(dataId);
+    for(AsyncTask task:asyncTasks){
+      task.setTimeout(false);
+      HttpServletResponse response = (HttpServletResponse)task.getAsyncContext().getResponse();
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.getWriter().println(configInfo);
+      task.getAsyncContext().complete();
+    }
+    return "success";
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(ConfigServer.class, args);
+  }
+}

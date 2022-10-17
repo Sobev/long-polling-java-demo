@@ -10,6 +10,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -65,6 +67,7 @@ public class ConfigServer {
     timeoutChecker.schedule(() -> {
       if(asyncTask.isTimeout()){
         dataIdContext.remove(dataId,asyncTask);
+        response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         asyncContext.complete();
       }
@@ -72,16 +75,17 @@ public class ConfigServer {
   }
 
   // Configure publishing access point
-  @RequestMapping("/publishConfig")
+  @PostMapping("/publishConfig")
   @SneakyThrows
-  public String publishConfig(String dataId, String configInfo){
-    log.info("publish configInfo dataId: [{}], configInfo: {}", dataId, configInfo);
-    Collection<AsyncTask> asyncTasks = dataIdContext.removeAll(dataId);
+  public String publishConfig(@RequestBody ConfigDto configDto){
+    log.info("publish configInfo dataId: [{}], configInfo: {}", configDto.getDataId(), configDto.getConfigInfo());
+    Collection<AsyncTask> asyncTasks = dataIdContext.removeAll(configDto.getDataId());
     for(AsyncTask task:asyncTasks){
       task.setTimeout(false);
       HttpServletResponse response = (HttpServletResponse)task.getAsyncContext().getResponse();
       response.setStatus(HttpServletResponse.SC_OK);
-      response.getWriter().println(configInfo);
+      response.setCharacterEncoding("UTF-8");
+      response.getWriter().println(configDto.getConfigInfo());
       task.getAsyncContext().complete();
     }
     return "success";

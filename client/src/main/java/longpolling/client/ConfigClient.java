@@ -10,12 +10,13 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 public class ConfigClient {
 
-    private CloseableHttpClient httpClient;
-    private RequestConfig requestConfig;
+    private final CloseableHttpClient httpClient;
+    private final RequestConfig requestConfig;
 
     public ConfigClient() {
         this.httpClient = HttpClientBuilder.create().build();
@@ -31,7 +32,7 @@ public class ConfigClient {
             CloseableHttpResponse response = httpClient.execute(request);
             switch (response.getStatusLine().getStatusCode()) {
                 case 200:
-                    BufferedReader bf = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+                    BufferedReader bf = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8));
                     StringBuilder builder = new StringBuilder();
                     String line;
                     while ((line = bf.readLine()) != null) {
@@ -54,6 +55,7 @@ public class ConfigClient {
             }
         } catch (Exception e) {
             log.error("lost connection!!!");
+            Thread.sleep(5000L);
             longPolling(url, dataId);
         }
     }
@@ -62,7 +64,10 @@ public class ConfigClient {
         File file = new File(filePath);
         if (!file.exists()) {
             try {
-                file.createNewFile();
+                boolean create = file.createNewFile();
+                if (!create) {
+                    log.error("file create failed");
+                }
             } catch (IOException e) {
                 log.error("file create failed");
             }
@@ -89,7 +94,7 @@ public class ConfigClient {
             StringBuilder builder = new StringBuilder();
             BufferedReader br = new BufferedReader(
                     new InputStreamReader(process.getInputStream()));
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 builder.append(line);
             }
@@ -103,13 +108,13 @@ public class ConfigClient {
         return null;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         // httpClient It prints a lot debug Log, close it
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         logger.setLevel(Level.WARN);
         ConfigClient configClient = new ConfigClient();
-        System.out.println("client started");
+        logger.info("client started");
         // ③ yes dataId: user Configuration monitoring
-        configClient.longPolling("http://127.0.0.1:8989/listener", "edc7436c-6ca8-430c-8dbc-1fec7b67bd3a");
+        configClient.longPolling("http://127.0.0.1:8989/listener", "gcc7436c-6ca8-430c-8dbc-1fec7b67bd3a");
     }
 }

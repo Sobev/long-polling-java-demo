@@ -3,7 +3,9 @@ package longpolling.server;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Data;
 import lombok.SneakyThrows;
@@ -19,6 +21,7 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
@@ -54,14 +57,15 @@ public class ConfigServer {
             .build();
     private ScheduledExecutorService timeoutChecker = new ScheduledThreadPoolExecutor(1, threadFactory);
 
-    private static final Cache<String, String> CLIENT_HEART_BEAT = CacheBuilder.newBuilder()
+    private Cache<String, String> CLIENT_HEART_BEAT = CacheBuilder.newBuilder()
             .expireAfterWrite(40L, TimeUnit.SECONDS)
             .build();
 
     @RequestMapping("/listener")
     public void addListener(HttpServletRequest request, HttpServletResponse response) {
         String dataId = request.getParameter("dataId");
-        CLIENT_HEART_BEAT.put("CLIENT_HEART_BEAT", request.getRemoteHost() + "_" + dataId);
+
+        CLIENT_HEART_BEAT.put(request.getRemoteHost() + "_" + dataId, "");
         // Turn on asynchronous
         AsyncContext asyncContext = request.startAsync(request, response);
         AsyncTask asyncTask = new AsyncTask(asyncContext, true);
@@ -97,8 +101,9 @@ public class ConfigServer {
 
     @PostMapping("/clients")
     public Object connectedClients() {
-        ImmutableMap<String, String> client_heart_beat = CLIENT_HEART_BEAT.getAllPresent(ImmutableList.of("CLIENT_HEART_BEAT"));
-        return client_heart_beat;
+        System.out.println(CLIENT_HEART_BEAT.size());
+        Set<String> set = CLIENT_HEART_BEAT.asMap().keySet();
+        return set;
     }
 
     public static void main(String[] args) {

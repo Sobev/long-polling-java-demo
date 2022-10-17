@@ -1,4 +1,4 @@
-package longpolling.server;
+package longpolling.client;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * @date 2022/10/17 9:18
  */
 @Data
-public class ConfigDto  {
+public class ConfigDto {
     /** 数据标识 */
     private String dataId;
     /** 配置信息 */

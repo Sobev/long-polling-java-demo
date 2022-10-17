@@ -1,6 +1,7 @@
 package longpolling.client;
 
 import ch.qos.logback.classic.Level;
+import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.config.RequestConfig;
@@ -11,6 +12,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 public class ConfigClient {
@@ -39,10 +41,25 @@ public class ConfigClient {
                         builder.append(line);
                     }
                     response.close();
-                    String configInfo = builder.toString();
-                    log.info("dataId: [{}] changed, receive configInfo: {}", dataId, configInfo);
+                    String res = builder.toString();
+                    log.info("dataId: [{}] changed, receive configInfo: {}", dataId, res);
+                    ConfigDto configDto = new Gson().fromJson(res, ConfigDto.class);
                     //write file
-                    writeFile("D:\\JF\\nginx.conf", configInfo);
+                    writeFile("D:\\JF\\nginx.conf", configDto.getConfigInfo());
+                    List<String> checkStatusCmd = configDto.getCheckStatusCmd();
+                    ShellCallback shellCallback = new ShellCallback();
+                    if (checkStatusCmd != null && checkStatusCmd.size() > 0) {
+                        //TODO: check file changed Follow-up
+                        for (String cmd : checkStatusCmd) {
+                            Object[] callback = shellCallback.callback(cmd, s -> ShellUtil.shellCommand(cmd, "/etc/nginx"));
+                            if((Integer) callback[0] == 1) {
+                                //execute err
+                                //TODO: call run err api
+                                break;
+                            }
+
+                        }
+                    }
                     longPolling(url, dataId);
                     break;
                 // ② 304 Response code tag configuration unchanged

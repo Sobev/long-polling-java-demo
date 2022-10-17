@@ -7,6 +7,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.GsonBuilder;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,7 @@ public class ConfigServer {
     public void addListener(HttpServletRequest request, HttpServletResponse response) {
         String dataId = request.getParameter("dataId");
 
-        CLIENT_HEART_BEAT.put(request.getRemoteHost() + "_" + dataId, "");
+        CLIENT_HEART_BEAT.put(request.getRemoteHost() + "_" + dataId, "alias");
         // Turn on asynchronous
         AsyncContext asyncContext = request.startAsync(request, response);
         AsyncTask asyncTask = new AsyncTask(asyncContext, true);
@@ -93,7 +94,7 @@ public class ConfigServer {
             HttpServletResponse response = (HttpServletResponse) task.getAsyncContext().getResponse();
             response.setStatus(HttpServletResponse.SC_OK);
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().println(configDto.getConfigInfo());
+            response.getWriter().println(new GsonBuilder().disableHtmlEscaping().create().toJson(configDto));
             task.getAsyncContext().complete();
         }
         return "success";

@@ -1,4 +1,4 @@
-package com.sobev.longpolling.server;
+package longpolling.server;
 
 import lombok.Data;
 

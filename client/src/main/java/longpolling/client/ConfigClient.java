@@ -4,9 +4,13 @@ import ch.qos.logback.classic.Level;
 import com.google.gson.Gson;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import longpolling.comm.ConfigDto;
+import longpolling.comm.VerifyDto;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -45,20 +49,17 @@ public class ConfigClient {
                     log.info("dataId: [{}] changed, receive configInfo: {}", dataId, res);
                     ConfigDto configDto = new Gson().fromJson(res, ConfigDto.class);
                     //write file
-                    writeFile("D:\\JF\\nginx.conf", configDto.getConfigInfo());
+                    writeFile(configDto.getPath() + File.separator + configDto.getFilename(), configDto.getConfigInfo());
                     List<String> checkStatusCmd = configDto.getCheckStatusCmd();
                     ShellCallback shellCallback = new ShellCallback();
                     if (checkStatusCmd != null && checkStatusCmd.size() > 0) {
-                        //TODO: check file changed Follow-up
-                        for (String cmd : checkStatusCmd) {
-                            Object[] callback = shellCallback.callback(cmd, s -> ShellUtil.shellCommand(cmd, "/etc/nginx"));
-                            if((Integer) callback[0] == 1) {
-                                //execute err
-                                //TODO: call run err api
-                                break;
-                            }
-
-                        }
+                        String verify = new FileChangeVerifier(checkStatusCmd)
+                                .verify(configDto.getPath());
+                        //TODO: call run err api
+                        HttpPost httpPost = new HttpPost("http://127.0.0.1:8989/verifyRes");
+                        httpPost.setHeader("Content-Type", "application/json");
+                        httpPost.setEntity(new StringEntity(new Gson().toJson(new VerifyDto(verify))));
+                        httpClient.execute(httpPost);
                     }
                     longPolling(url, dataId);
                     break;
@@ -101,31 +102,8 @@ public class ConfigClient {
         }
     }
 
-    private static String shellCommand(String commandLine, String dir) {
-        try {
-            Process process =
-                    new ProcessBuilder(new String[]{"bash", "-c", commandLine})
-                            .redirectErrorStream(true)
-                            .directory(new File(dir))
-                            .start();
-            StringBuilder builder = new StringBuilder();
-            BufferedReader br = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = br.readLine()) != null) {
-                builder.append(line);
-            }
-//            if (process.waitFor() == 0) {
-//                System.out.println("Success!");
-//            }
-            return builder.toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public static void main(String[] args) {
+        System.out.println(File.separator);
         // httpClient It prints a lot debug Log, close it
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         logger.setLevel(Level.WARN);

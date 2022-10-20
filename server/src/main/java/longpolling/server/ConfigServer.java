@@ -11,6 +11,8 @@ import com.google.gson.GsonBuilder;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import longpolling.comm.ConfigDto;
+import longpolling.comm.VerifyDto;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -105,6 +107,11 @@ public class ConfigServer {
         System.out.println(CLIENT_HEART_BEAT.size());
         Set<String> set = CLIENT_HEART_BEAT.asMap().keySet();
         return set;
+    }
+
+    @PostMapping("/verifyRes")
+    public void verifyRes(@RequestBody VerifyDto dto) {
+        log.info(dto.getVerify());
     }
 
     public static void main(String[] args) {

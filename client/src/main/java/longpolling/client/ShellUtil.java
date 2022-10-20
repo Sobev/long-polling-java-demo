@@ -10,6 +10,12 @@ import java.io.InputStreamReader;
  * @date 2022/10/17 15:39
  */
 public class ShellUtil {
+    /**
+     *
+     * @param commandLine
+     * @param dir
+     * @return object[2]{success or not, result}
+     */
     public static Object[] shellCommand(String commandLine, String dir) {
         Object[] res = new Object[2];
         res[0] = 1;

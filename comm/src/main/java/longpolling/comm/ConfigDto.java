@@ -1,4 +1,4 @@
-package longpolling.server;
+package longpolling.comm;
 
 import lombok.Data;
 
@@ -16,4 +16,6 @@ public class ConfigDto  {
     private String configInfo;
     /** 检查状态cmd exp: [nginx -t, nginx -s reload] */
     private List<String> checkStatusCmd;
+    private String path;
+    private String filename;
 }

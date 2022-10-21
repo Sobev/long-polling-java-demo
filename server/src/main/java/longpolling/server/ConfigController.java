@@ -14,9 +14,11 @@ import longpolling.comm.VerifyDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -55,6 +57,21 @@ public class ConfigController {
      * dataId - listen file map
      */
     private ConcurrentHashMap<String, String> dataIdFile = new ConcurrentHashMap<>();
+
+    @PostConstruct
+    public void readDataIdPathFromFile() {
+        try {
+            File conf = ResourceUtils.getFile("classpath:dataIdFile.conf");
+            BufferedReader reader = new BufferedReader(new FileReader(conf));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] split = line.split(" ");
+                dataIdFile.put(split[0], split[1]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @RequestMapping("/listener")
     public void addListener(HttpServletRequest request, HttpServletResponse response) {

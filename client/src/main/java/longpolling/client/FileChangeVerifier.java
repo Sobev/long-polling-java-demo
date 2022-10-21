@@ -24,10 +24,6 @@ public class FileChangeVerifier {
         return this;
     }
 
-    public List<String> build() {
-        return verifyCommands;
-    }
-
     public String verify(String dir) {
         StringBuilder builder = new StringBuilder();
         for (String command : verifyCommands) {

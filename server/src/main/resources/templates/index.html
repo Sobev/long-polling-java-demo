@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>home page</title>
+    <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.css">-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.js"></script>
+    <style>
+        textarea {
+            width: 200px;
+            min-height: 200px;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+<div style="padding-top: 5rem;padding-bottom: 5rem;">
+    <div class="ui container stackable">
+        <div class="ui divided grid">
+            <div class="fifteen wide column">
+                <table class="ui celled table">
+                    <thead>
+                    <tr>
+                        <th>ip</th>
+                        <th>uuid</th>
+                        <th>view file</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="client :${clients}">
+                        <td th:text="${client.ip}"></td>
+                        <td th:text="${client.uuid}"></td>
+                        <!--                        <td><a th:href="@{/config/getFileContent?dataId=}+${client.uuid}">edit</a></td>-->
+                        <td>
+                            <button class="circular ui icon button" th:id="${client.uuid}" name="viewBtn">
+                                <i class="icon settings"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div class="ui longer modal">
+                    <div class="header" id="filepath">filepath</div>
+                    <!--                    <div class="scrolling content">-->
+                    <!--                        <div class="ui form">-->
+                    <!--                            <div class="field">-->
+                    <!--                                <label>Text</label>-->
+                    <!--                                <pre>-->
+                    <!--                                    <code style="white-space: pre-wrap;" class="language-java">-->
+                    <!--                                        <textarea id="fileContent"></textarea>-->
+                    <!--                                    </code>-->
+                    <!--                                </pre>-->
+                    <!--                            </div>-->
+                    <!--                        </div>-->
+                    <!--                        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>-->
+                    <!--                        <script>hljs.highlightAll();</script>-->
+                    <!--                    </div>-->
+                    <div class="ui form">
+                        <div class="field">
+                            <textarea id="fileContent"></textarea>
+                            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+                            <script>hljs.highlightAll();</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<script>
+
+    $("button[name='viewBtn']").click((function () {
+        $.ajax({
+            type: "GET",
+            url: "/config/getFileContent?dataId=" + this.id,
+            headers: {"Content-Type": "application/json;charset=utf-8"},
+            success: (data) => {
+                // let escape = data.data.replace(/(\n|\r|\r\n|↵)/g, '<br>')
+                //将“/n”替换为“</br>”
+                let string = data.data
+                string = string.replace(/\r\n/g, "</br>")
+                //将”/r/n“替换为”</br>“
+                string = string.replace(/\n/g, "</br>");
+                //替换所有的空格（中文空格、英文空格都会被替换）
+                // string = string.replace(/\s/g, "&nbsp;");
+                console.log(string)
+                $("#fileContent").text(string)
+            },
+            error: (err) => {
+                console.log(err)
+            }
+        })
+        $('.ui.longer.modal')
+            .modal('show')
+        ;
+    }));
+
+    var textarea = document.querySelector('textarea');
+
+    textarea.addEventListener('input', (e) => {
+        textarea.style.height = '200px';
+        textarea.style.height = e.target.scrollHeight + 'px';
+    });
+</script>

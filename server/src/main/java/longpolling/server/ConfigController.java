@@ -13,6 +13,7 @@ import longpolling.comm.ConfigDto;
 import longpolling.comm.VerifyDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,14 +22,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * @author luojx
  * @date 2022/10/21 9:26
  */
-@RestController
+@Controller
 @RequestMapping("/config")
 @Slf4j
 public class ConfigController {
@@ -76,6 +79,7 @@ public class ConfigController {
 
     // Configure publishing access point
     @PostMapping("/publishConfig")
+    @ResponseBody
     @SneakyThrows
     public Res<String> publishConfig(@RequestBody ConfigDto configDto) {
         log.info("publish configInfo dataId: [{}], configInfo: {}", configDto.getDataId(), configDto.getConfigInfo());
@@ -91,14 +95,22 @@ public class ConfigController {
         return Res.success("success");
     }
 
-    @PostMapping("/clients")
-    public Object connectedClients() {
+    @GetMapping("/clients")
+    public String connectedClients(Model model) {
         System.out.println(CLIENT_HEART_BEAT.size());
-        Set<String> set = CLIENT_HEART_BEAT.asMap().keySet();
-        return set;
+        List<ClientVo> clients = CLIENT_HEART_BEAT.asMap().keySet()
+                .stream()
+                .map(client -> {
+                    String[] split = client.split("_");
+                    return new ClientVo(split[0], split[1]);
+                })
+                .collect(Collectors.toList());
+        model.addAttribute("clients", clients);
+        return "index";
     }
 
     @GetMapping("/getFileContent")
+    @ResponseBody
     public Res<String> getFileContentByDataId(@RequestParam("dataId") String dataId) throws IOException {
         if (!StringUtils.hasText(dataId)) {
             return Res.error("dataId null");
@@ -120,6 +132,7 @@ public class ConfigController {
     }
 
     @PostMapping("/addDataId")
+    @ResponseBody
     public Res<String> addDataId(@RequestBody DataIdFileDto dto) {
         if (dataIdFile.get(dto.getDataId()) != null) {
             return Res.error("dataId already exists");
@@ -133,12 +146,14 @@ public class ConfigController {
     }
 
     @PostMapping("verifyRes")
+    @ResponseBody
     public void verifyRes(@RequestBody VerifyDto dto) {
         //change build id store into db
         log.info(dto.getVerify());
     }
 
     @PostMapping("queryBuild")
+    @ResponseBody
     public Object queryBuild() {
         return 1;
     }

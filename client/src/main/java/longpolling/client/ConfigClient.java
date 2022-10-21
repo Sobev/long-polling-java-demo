@@ -69,6 +69,7 @@ public class ConfigClient {
                     longPolling(url, dataId);
                     break;
                 default:
+                    longPolling(url, dataId);
 //                throw new RuntimeException("unExpected HTTP status code");
             }
         } catch (Exception e) {
@@ -103,13 +104,12 @@ public class ConfigClient {
     }
 
     public static void main(String[] args) {
-        System.out.println(File.separator);
         // httpClient It prints a lot debug Log, close it
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger("org.apache.http");
         logger.setLevel(Level.WARN);
         ConfigClient configClient = new ConfigClient();
         logger.info("client started");
         // ③ yes dataId: user Configuration monitoring
-        configClient.longPolling("http://127.0.0.1:8989/listener", "gcc7436c-6ca8-430c-8dbc-1fec7b67bd3a");
+        configClient.longPolling("http://127.0.0.1:8989/config/listener", "gcc7436c-6ca8-430c-8dbc-1fec7b67bd3a");
     }
 }

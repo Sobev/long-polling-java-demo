@@ -27,10 +27,7 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -82,7 +79,7 @@ public class ConfigController {
     public void addListener(HttpServletRequest request, HttpServletResponse response) {
         String dataId = request.getParameter("dataId");
 
-        CLIENT_HEART_BEAT.put(request.getRemoteHost() + "_" + dataId, "alias");
+        CLIENT_HEART_BEAT.put(dataId, request.getRemoteHost());
         // Turn on asynchronous
         AsyncContext asyncContext = request.startAsync(request, response);
         AsyncTask asyncTask = new AsyncTask(asyncContext, true);
@@ -120,26 +117,27 @@ public class ConfigController {
     @GetMapping({"/**", "/clients"})
     public String connectedClients(Model model) {
         System.out.println(CLIENT_HEART_BEAT.size());
-        List<ClientVo> clients = CLIENT_HEART_BEAT.asMap().keySet()
-                .stream()
-                .map(client -> {
-                    String[] split = client.split("_");
-                    return new ClientVo(split[0], split[1]);
-                })
-                .collect(Collectors.toList());
+        Map<String, String> clientMap = CLIENT_HEART_BEAT.asMap();
+        List<ClientVo> clientVos = dataIdFile.entrySet().stream()
+                .map(entry -> {
+                    ClientVo clientVo;
+                    if (clientMap.containsKey(entry.getKey())) {
+                        clientVo = new ClientVo(clientMap.get(entry.getKey()), entry.getKey());
+                        clientVo.setStatus(true);
+                    } else {
+                        clientVo = new ClientVo("_", entry.getKey());
+                        clientVo.setStatus(false);
+                    }
+                    String filepath = entry.getValue();
+                    int index = filepath.lastIndexOf(File.separator);
+                    String path = filepath.substring(0, index);
+                    String filename = filepath.substring(index + 1);
+                    clientVo.setPath(path);
+                    clientVo.setFilename(filename);
+                    return clientVo;
+                }).collect(Collectors.toList());
 
-        for (ClientVo client : clients) {
-            String filepath = dataIdFile.getOrDefault(client.getUuid(), "");
-            if (!StringUtils.hasText(filepath)) {
-                continue;
-            }
-            int index = filepath.lastIndexOf(File.separator);
-            String path = filepath.substring(0, index);
-            String filename = filepath.substring(index + 1);
-            client.setPath(path);
-            client.setFilename(filename);
-        }
-        model.addAttribute("clients", clients);
+        model.addAttribute("clients", clientVos);
         return "index";
     }
 

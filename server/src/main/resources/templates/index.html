@@ -63,7 +63,9 @@
                             <tr th:each="client :${clients}">
                                 <td th:text="${client.ip}"></td>
                                 <td th:text="${client.uuid}"></td>
-                                <td th:text="#{client.status}"></td>
+<!--                                <td th:text="#{client.status}"></td>-->
+                                <td><a th:class="${client.status} ? 'ui green empty circular label': 'ui red empty circular label'"></a></td>
+<!--                                <td><a th:class="ui green empty circular label"></a></td>-->
                                 <td th:text="${client.path}" class="remake"></td>
                                 <td th:text="${client.filename}" class="remake"></td>
                                 <!--                        <td><a th:href="@{/config/getFileContent?dataId=}+${client.uuid}">edit</a></td>-->
@@ -170,6 +172,7 @@
         }
     });
 
+
     $("button[name='viewBtn']").click(function () {
         $.ajax({
             type: "GET",
@@ -188,8 +191,8 @@
                     .forEach((item) => {
                         td_arr.push(item);
                     });
-                path = td_arr[2].innerText;
-                filename = td_arr[3].innerText;
+                path = td_arr[3].innerText;
+                filename = td_arr[4].innerText;
             },
             error: (err) => {
                 console.log(err);
@@ -225,6 +228,7 @@
             cmd_arr.push(cmd_ele[i].innerText);
         }
         let fileContent = $("#fileContent").val();
+        //TODO: 解决path和filename获取错误
         $.ajax({
             type: "POST",
             headers: { "Content-Type": "application/json;charset=utf-8" },

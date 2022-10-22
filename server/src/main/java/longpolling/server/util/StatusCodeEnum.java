@@ -1,4 +1,4 @@
-package longpolling.server;
+package longpolling.server.util;
 
 
 /**

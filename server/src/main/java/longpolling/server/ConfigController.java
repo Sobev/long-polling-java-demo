@@ -11,7 +11,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import longpolling.comm.ConfigDto;
 import longpolling.comm.VerifyDto;
-import org.springframework.http.ResponseEntity;
+import longpolling.server.model.ChangeFileDirDto;
+import longpolling.server.model.ClientVo;
+import longpolling.server.model.DataIdFileDto;
+import longpolling.server.util.FileAccessorUtil;
+import longpolling.server.util.Res;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.ResourceUtils;
@@ -23,6 +27,7 @@ import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -112,7 +117,7 @@ public class ConfigController {
         return Res.success("success");
     }
 
-    @GetMapping("/clients")
+    @GetMapping({"/**", "/clients"})
     public String connectedClients(Model model) {
         System.out.println(CLIENT_HEART_BEAT.size());
         List<ClientVo> clients = CLIENT_HEART_BEAT.asMap().keySet()
@@ -122,6 +127,18 @@ public class ConfigController {
                     return new ClientVo(split[0], split[1]);
                 })
                 .collect(Collectors.toList());
+
+        for (ClientVo client : clients) {
+            String filepath = dataIdFile.getOrDefault(client.getUuid(), "");
+            if (!StringUtils.hasText(filepath)) {
+                continue;
+            }
+            int index = filepath.lastIndexOf(File.separator);
+            String path = filepath.substring(0, index);
+            String filename = filepath.substring(index + 1);
+            client.setPath(path);
+            client.setFilename(filename);
+        }
         model.addAttribute("clients", clients);
         return "index";
     }
@@ -137,7 +154,7 @@ public class ConfigController {
         }
         String path = dataIdFile.get(dataId);
         StringBuilder builder = new StringBuilder();
-        try(BufferedReader reader = new BufferedReader(new FileReader(path))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 builder.append(line);
@@ -162,11 +179,26 @@ public class ConfigController {
         return Res.success("success");
     }
 
+    @PostMapping("/changeFileDir")
+    @ResponseBody
+    public Res<String> changeFileDir(@RequestBody ChangeFileDirDto dto) {
+        if (!StringUtils.hasText(dto.getPath())) {
+            return Res.error("not valid path");
+        }
+        //change dataIdFile map then change conf file
+//        boolean b = FileAccessorUtil.writeFile(dto.getDataId(), dto.getPath() + File.separator + dto.getFilename());
+//        if(!b) {
+//            return Res.error("file write failed");
+//        }
+        dataIdFile.put(dto.getDataId(), dto.getPath() + File.separator + dto.getFilename());
+        return Res.success("success");
+    }
+
     @PostMapping("verifyRes")
     @ResponseBody
     public void verifyRes(@RequestBody VerifyDto dto) {
         //change build id store into db
-        log.info(dto.getVerify());
+        log.info("file change callback {}", dto.getVerify());
     }
 
     @PostMapping("queryBuild")

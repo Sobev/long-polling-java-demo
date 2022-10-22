@@ -56,7 +56,7 @@ public class ConfigClient {
                         String verify = new FileChangeVerifier(checkStatusCmd)
                                 .verify(configDto.getPath());
                         //TODO: call run err api
-                        HttpPost httpPost = new HttpPost("http://127.0.0.1:8989/verifyRes");
+                        HttpPost httpPost = new HttpPost("http://127.0.0.1:8989/config/verifyRes");
                         httpPost.setHeader("Content-Type", "application/json");
                         httpPost.setEntity(new StringEntity(new Gson().toJson(new VerifyDto(verify))));
                         httpClient.execute(httpPost);

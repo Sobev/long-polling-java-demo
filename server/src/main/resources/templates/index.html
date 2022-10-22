@@ -1,110 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>home page</title>
     <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.5.0/dist/semantic.min.css">-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/default.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.5.0/semantic.min.js"></script>
     <style>
+        .add-margin {
+            margin: 15px 0px 0px 0px;
+        }
+
         textarea {
-            width: 200px;
-            min-height: 150px;
-            padding: 0;
+            min-height: 400px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+                "Segoe UI Symbol";
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.004);
+            text-rendering: optimizeLegibility !important;
+            -webkit-font-smoothing: antialiased !important;
+            box-sizing: border-box;
+            border: 0;
+            border-bottom: 1px solid #e3e3e3;
+            margin: 0;
+            padding: 12px;
+            resize: none;
+            font-size: 20px;
+            line-height: 1.2;
+            width: 100%;
+            /*min-height: calc(24px + 1.618em);*/
+            color: #161616;
+            transition: background-color 0.4s;
+        }
+
+        textarea:focus {
+            outline: none;
+            background-color: #fafafa;
         }
     </style>
 </head>
+
 <body>
-<div style="padding-top: 5rem;padding-bottom: 5rem;">
-    <div class="ui container stackable">
-        <div class="ui divided grid">
-            <div class="fifteen wide column">
-                <table class="ui celled table">
-                    <thead>
-                    <tr>
-                        <th>ip</th>
-                        <th>uuid</th>
-                        <th>view file</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="client :${clients}">
-                        <td th:text="${client.ip}"></td>
-                        <td th:text="${client.uuid}"></td>
-                        <!--                        <td><a th:href="@{/config/getFileContent?dataId=}+${client.uuid}">edit</a></td>-->
-                        <td>
-                            <button class="circular ui icon button" th:id="${client.uuid}" name="viewBtn">
-                                <i class="icon settings"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                <div class="ui longer modal">
-                    <div class="header" id="filepath">filepath</div>
-                    <!--                    <div class="scrolling content">-->
-                    <!--                        <div class="ui form">-->
-                    <!--                            <div class="field">-->
-                    <!--                                <label>Text</label>-->
-                    <!--                                <pre>-->
-                    <!--                                    <code style="white-space: pre-wrap;" class="language-java">-->
-                    <!--                                        <textarea id="fileContent"></textarea>-->
-                    <!--                                    </code>-->
-                    <!--                                </pre>-->
-                    <!--                            </div>-->
-                    <!--                        </div>-->
-                    <!--                        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>-->
-                    <!--                        <script>hljs.highlightAll();</script>-->
-                    <!--                    </div>-->
-                    <div class="ui form">
-                        <div class="field">
-                            <textarea id="fileContent"></textarea>
-                            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
-                            <script>hljs.highlightAll();</script>
+    <div style="padding-top: 5rem; padding-bottom: 5rem">
+        <div class="ui container stackable">
+            <div class="ui divided grid">
+                <div class="fifteen wide column">
+                    <table class="ui celled table" id="mytable">
+                        <thead>
+                            <tr>
+                                <th>ip</th>
+                                <th>uuid</th>
+                                <th>status</th>
+                                <th>path</th>
+                                <th>filename</th>
+                                <th>view file</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="client :${clients}">
+                                <td th:text="${client.ip}"></td>
+                                <td th:text="${client.uuid}"></td>
+                                <td th:text="#{client.status}"></td>
+                                <td th:text="${client.path}" class="remake"></td>
+                                <td th:text="${client.filename}" class="remake"></td>
+                                <!--                        <td><a th:href="@{/config/getFileContent?dataId=}+${client.uuid}">edit</a></td>-->
+                                <td>
+                                    <button class="circular ui icon button" th:id="${client.uuid}" name="viewBtn">
+                                        <i class="icon settings"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="ui longer modal">
+                        <div class="header" id="filepath">filepath</div>
+                        <div class="ui internally celled grid">
+                            <div class="row">
+                                <div class="twelve wide column">
+                                    <textarea id="fileContent"></textarea>
+                                </div>
+                                <div class="four wide column">
+                                    <div id="command-list">
+                                        <div class="add-margin">
+                                            <a class="ui teal image label">
+                                                systemctl status nginx
+                                                <i class="delete icon"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="save-config" style="margin-left: 10px" class="ui teal button">
+                            Save
+                        </button>
+                        <div style="float: right" class="ui bottom attached">
+                            <div class="ui action input">
+                                <input id="command-input" type="text" value="" />
+                                <button id="command-add" class="ui teal icon button">
+                                    <i class="paper plane outline icon"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>
 
 <script>
+    var uuid;
+    var path;
+    var filename;
 
-    $("button[name='viewBtn']").click((function () {
+    $(function () {
+        var remake = document.getElementsByClassName("remake");
+        for (let i = 0; i < remake.length; i++) {
+            remake[i].onclick = () => {
+                let old_value = remake[i].innerText
+                remake[i].style.display = "none";
+                var para = document.createElement("input");
+                var ctd = document.createElement("td");
+                para.value = remake[i].innerHTML;
+                remake[i].parentNode.insertBefore(ctd, remake[i]);
+                ctd.appendChild(para, ctd);
+                para.focus();
+                para.addEventListener("keypress", function (event) {
+                    if (event.keyCode == "13") {
+                        event.preventDefault();
+                        para.blur()
+                    }
+                });
+                para.onblur = () => {
+                    let param_arr = []
+                    remake[i].innerHTML = para.value;
+                    remake[i].parentNode.removeChild(ctd);
+                    remake[i].style.display = "";
+                    console.log(remake[i].parentNode)
+                    remake[i].parentNode.querySelectorAll("td").forEach(ele => {
+                        // console.log(ele)
+                        param_arr.push(ele.innerText)
+                    })
+                    let dataId = param_arr[1]
+                    let path = param_arr[2]
+                    let filename = param_arr[3]
+                    console.log(param_arr);
+                    if(old_value === para.value) {
+                        return;
+                    }
+                    $.ajax({
+                        type: "POST",
+                        headers: {"Content-Type": "application/json;charset=utf-8"},
+                        url: "/config/changeFileDir",
+                        dataType: "json",
+                        data: JSON.stringify({
+                            dataId: dataId,
+                            path: path,
+                            filename: filename
+                        })
+                    })
+                };
+            };
+        }
+    });
+
+    $("button[name='viewBtn']").click(function () {
         $.ajax({
             type: "GET",
             url: "/config/getFileContent?dataId=" + this.id,
-            headers: {"Content-Type": "application/json;charset=utf-8"},
+            headers: { "Content-Type": "application/json;charset=utf-8" },
             success: (data) => {
-                // let escape = data.data.replace(/(\n|\r|\r\n|↵)/g, '<br>')
-                //将“/n”替换为“</br>”
-                let string = data.data
-                string = string.replace(/\r\n/g, "</br>")
-                //将”/r/n“替换为”</br>“
+                let string = data.data;
+                string = string.replace(/\r\n/g, "</br>");
                 string = string.replace(/\n/g, "</br>");
-                //替换所有的空格（中文空格、英文空格都会被替换）
-                // string = string.replace(/\s/g, "&nbsp;");
-                console.log(string)
-                $("#fileContent").text(string)
+                $("#fileContent").text(string);
+                uuid = this.id;
+                let td_arr = [];
+                $("button[name='viewBtn']")
+                    .parents("tr")[0]
+                    .querySelectorAll("td")
+                    .forEach((item) => {
+                        td_arr.push(item);
+                    });
+                path = td_arr[2].innerText;
+                filename = td_arr[3].innerText;
             },
             error: (err) => {
-                console.log(err)
-            }
-        })
-        $('.ui.longer.modal')
-            .modal('show')
-        ;
-    }));
+                console.log(err);
+            },
+        });
+        $(".ui.longer.modal").modal("show");
+    });
 
-    var textarea = document.querySelector('textarea');
+    $("body").on("click", ".delete.icon", (e) => {
+        let m = e.target.parentNode;
+        m.parentNode.removeChild(m);
+    });
 
-    textarea.addEventListener('input', (e) => {
-        textarea.style.height = '200px';
-        textarea.style.height = e.target.scrollHeight + 'px';
+    //回车事件绑定
+    $("#command-input").bind("keypress", function (event) {
+        if (event.keyCode == "13") {
+            event.preventDefault();
+            let text = $("#command-input").val();
+            appendCommand(text);
+        }
+    });
+    //按钮事件绑定
+    $("#command-add").bind("click", (e) => {
+        let text = $("#command-input").val();
+        appendCommand(text);
+    });
+
+    $("#save-config").bind("click", (e) => {
+        //get command list
+        let cmd_arr = [];
+        let cmd_ele = $(".ui.teal.image.label");
+        for (let i = 0; i < cmd_ele.length; i++) {
+            cmd_arr.push(cmd_ele[i].innerText);
+        }
+        let fileContent = $("#fileContent").val();
+        $.ajax({
+            type: "POST",
+            headers: { "Content-Type": "application/json;charset=utf-8" },
+            url: "/config/publishConfig",
+            dataType: "json",
+            data: JSON.stringify({
+                dataId: uuid,
+                configInfo: fileContent,
+                checkStatusCmd: cmd_arr,
+                path: path,
+                filename: filename,
+            }),
+            success: (data) => { },
+            error: (err) => {
+                console.log(err);
+            },
+        });
+        //get file content
+    });
+
+    function appendCommand(cmd) {
+        if (cmd === null || cmd === "") {
+            return;
+        }
+        var content =
+            "" +
+            '<div class="add-margin">\n' +
+            '<a class="ui teal image label">\n' +
+            cmd +
+            "\n" +
+            '<i class="delete icon"></i>\n' +
+            "</a>\n" +
+            "</div>";
+        $("#command-list").append(content);
+    }
+
+    var textarea = document.querySelector("textarea");
+
+    textarea.addEventListener("input", (e) => {
+        textarea.style.height = "400px";
+        textarea.style.height = e.target.scrollHeight + "px";
     });
 </script>

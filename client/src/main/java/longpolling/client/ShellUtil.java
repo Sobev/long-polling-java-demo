@@ -27,7 +27,7 @@ public class ShellUtil {
                             .start();
             StringBuilder builder = new StringBuilder();
             BufferedReader br = new BufferedReader(
-                    new InputStreamReader(process.getInputStream()));
+                    new InputStreamReader(process.getInputStream(), "GBK"));
             String line = null;
             while ((line = br.readLine()) != null) {
                 builder.append(line);

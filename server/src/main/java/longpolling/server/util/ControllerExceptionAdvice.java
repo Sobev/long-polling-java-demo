@@ -1,6 +1,7 @@
-package longpolling.server;
+package longpolling.server.util;
 
 
+import longpolling.server.util.Res;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.FieldError;
